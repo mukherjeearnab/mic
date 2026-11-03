@@ -1,0 +1,653 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MIC v2.0 - annotated capitalization-profile metamodel",
+  "description": "A machine-readable reconstruction of the complete Model Identity Card v2.0 information model. This is an independently authored JSON representation, not an official IRT SystemX serialization. Published multiplicities apply to capitalization after model development, not necessarily to preliminary specification. MAPPING CONVENTIONS: all five category wrappers are required by this JSON profile, although MIC does not declare wrapper multiplicities. Optional single values are omitted, not null. Repeated fields are arrays: zero values can be represented by omission or an empty array, and required repeated fields have minItems:1. Array ordering has no MIC-defined significance and duplicates are not prohibited. Strings have no minimum length because MIC supplies none. Concrete objects reject unknown properties to detect misspellings; this is a closed implementation profile, not a prohibition on MIC extensions in other representations. Recursive relationships use finite JSON containment without identifiers, shared references, or cycles. Physical-unit consistency, expression interpretation, calendar validity, and lifecycle-specific completeness beyond capitalization require external semantic validation. No MIC composition, execution provenance, test-to-metric linkage, or other unlisted extension is invented.",
+  "$comment": "SOURCE: IRT SystemX, Model Identity Card (MIC): List of information characterizing a simulation model, v2.0, released 8 December 2020. Specification: https://mic.irt-systemx.fr/api/send-pdf?filename=MIC_Model_Identity_Card_v2.0.pdf ; website: https://mic.irt-systemx.fr/mic . Page references below are printed page numbers. ATTRIBUTION AND LICENSE: adapted from that specification under Creative Commons Attribution-ShareAlike 4.0 International, https://creativecommons.org/licenses/by-sa/4.0/ . This adaptation is provided under the same license. CHANGES: normalized JSON identifiers, root/category wrappers, closed objects, shared value definition, and explicitly annotated inferred group membership. No official schema URL or identifier is asserted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generalInformation",
+    "integration",
+    "contentAndComputation",
+    "portsInternalVariablesAndParameters",
+    "verificationAndValidation"
+  ],
+  "properties": {
+    "generalInformation": {
+      "$ref": "#/$defs/GeneralInformation"
+    },
+    "integration": {
+      "$ref": "#/$defs/Integration"
+    },
+    "contentAndComputation": {
+      "$ref": "#/$defs/ContentAndComputation"
+    },
+    "portsInternalVariablesAndParameters": {
+      "$ref": "#/$defs/PortsInternalVariablesAndParameters"
+    },
+    "verificationAndValidation": {
+      "$ref": "#/$defs/VerificationAndValidation"
+    }
+  },
+  "$defs": {
+    "GeneralInformation": {
+      "title": "I. General information",
+      "description": "Identity, responsibility, lifecycle, and access conditions of the simulation model.",
+      "$comment": "SOURCE: pp. 3-4. The category object is a JSON mapping choice. Required fields reflect the published capitalization multiplicities. Model name is not a unique identifier. This schema does not introduce a model ID or MIC ID.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "owner", "lifeCycleState", "version", "versionDate"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name [1]. A short, clear model name; not necessarily unique."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description [1]. What the model represents and what it is used for; may summarize assumptions and multiple uses."
+        },
+        "owner": {
+          "type": "string",
+          "description": "Owner [1]. Responsible person or institution, potentially including contact information."
+        },
+        "lifeCycleState": {
+          "type": "string",
+          "description": "Life cycle state [1]. Open vocabulary; Specification and Capitalization are examples, not enumeration literals."
+        },
+        "version": {
+          "type": "string",
+          "description": "Version [1]. Simulation-model version, not MIC specification version. Not used in preliminary specification; required here for capitalization."
+        },
+        "versionDate": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12][0-9]|3[01]))?)?$",
+          "description": "Version date [1]. Model-version release date: YYYY, YYYY-MM, or YYYY-MM-DD.",
+          "$comment": "The pattern checks precision and basic month/day ranges, not calendar validity such as leap years. JSON Schema format:date is deliberately not used because partial dates are permitted."
+        },
+        "confidentiality": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Confidentiality [0..*]. Public access, named parties, a referenced confidentiality scale, or a legal document such as an NDA."
+        },
+        "license": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "License [0..*]. Model access/use conditions or contract references. Not the license of this schema or of the MIC specification."
+        }
+      }
+    },
+    "Integration": {
+      "title": "II. Integration",
+      "$comment": "SOURCE: pp. 5-9. Category wrapper is a JSON mapping choice.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["software"],
+      "properties": {
+        "software": {
+          "$ref": "#/$defs/Software",
+          "description": "Software [1]. Always present in the capitalization profile."
+        },
+        "referenceHardwareAndPerformance": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/ReferenceHardwareAndPerformance"},
+          "description": "Reference hardware and performance [0..*]. Suitable reference machines and associated performance; not a full execution history."
+        }
+      }
+    },
+    "Software": {
+      "$comment": "SOURCE: pp. 5-8. Multiple top-level requirements represent collectively required dependencies; each recursive alternative chain represents interchangeable choices. No cross-category compatibility or general Boolean dependency language is specified.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["languages", "fileFormats"],
+      "properties": {
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/Language"},
+          "description": "Language [1..*]."
+        },
+        "fileFormats": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/FileFormat"},
+          "description": "File format [1..*]. No language-to-format association or file inventory is defined."
+        },
+        "requiredSimulationTools": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/RequiredSimulationTool"},
+          "description": "Required simulation tool [0..*]."
+        },
+        "requiredCompilers": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/RequiredCompiler"},
+          "description": "Required compiler [0..*]."
+        },
+        "requiredOperatingSystems": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/RequiredOperatingSystem"},
+          "description": "Required operating system [0..*]. May represent different machines requiring different operating systems."
+        },
+        "otherSoftwareRequirements": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/OtherSoftwareRequirement"},
+          "description": "Other software requirement [0..*]."
+        }
+      }
+    },
+    "Language": {
+      "$comment": "SOURCE: p. 5.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["languageName"],
+      "properties": {
+        "languageName": {
+          "type": "string",
+          "description": "Language name [1]. Programming/modelling language for compiled or noncompiled models.",
+          "examples": ["Modelica", "C", "Python", "Matlab", "Simulink"]
+        },
+        "languageVersion": {
+          "type": "string",
+          "description": "Language version [0..1]."
+        }
+      }
+    },
+    "FileFormat": {
+      "$comment": "SOURCE: pp. 5-6.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileFormatName"],
+      "properties": {
+        "fileFormatName": {
+          "type": "string",
+          "description": "File format name [1]. Distinct from the model's programming language.",
+          "examples": ["SLX", "FMU", "DLL", "M"]
+        },
+        "fileFormatVersion": {
+          "type": "string",
+          "description": "File format version [0..1]."
+        }
+      }
+    },
+    "RequiredSimulationTool": {
+      "$comment": "SOURCE: p. 6. Alternative tool has multiplicity 0..1, not 0..*. Multiple alternatives are expressed by recursion. JSON instances form finite trees; no shared-reference or cyclic object encoding is introduced.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["toolName"],
+      "properties": {
+        "toolName": {
+          "type": "string",
+          "description": "Tool name [1]. Simulation tool required to run the model."
+        },
+        "toolVersion": {
+          "type": "string",
+          "description": "Tool version [0..1]. If absent, any version is assumed usable."
+        },
+        "alternativeTool": {
+          "$ref": "#/$defs/RequiredSimulationTool",
+          "description": "Alternative tool [0..1]. An interchangeable tool or tool version, which can itself have an alternative."
+        }
+      }
+    },
+    "RequiredCompiler": {
+      "$comment": "SOURCE: p. 7. Recursive alternatives are interchangeable; multiple top-level entries are separate requirements.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compilerName"],
+      "properties": {
+        "compilerName": {
+          "type": "string",
+          "description": "Compiler name [1]. May be required independently or within a simulation tool."
+        },
+        "compilerVersion": {
+          "type": "string",
+          "description": "Compiler version [0..1]. If absent, any version is assumed usable."
+        },
+        "alternativeCompiler": {
+          "$ref": "#/$defs/RequiredCompiler",
+          "description": "Alternative compiler [0..1]. Recursively interchangeable compiler or version."
+        }
+      }
+    },
+    "RequiredOperatingSystem": {
+      "$comment": "SOURCE: pp. 7-8.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operatingSystemName"],
+      "properties": {
+        "operatingSystemName": {
+          "type": "string",
+          "description": "Operating system name [1]."
+        },
+        "operatingSystemVersion": {
+          "type": "string",
+          "description": "Operating system version [0..1]. If absent, any version is assumed usable."
+        },
+        "alternativeOperatingSystem": {
+          "$ref": "#/$defs/RequiredOperatingSystem",
+          "description": "Alternative operating system [0..1]. Recursively interchangeable OS or version."
+        }
+      }
+    },
+    "OtherSoftwareRequirement": {
+      "$comment": "SOURCE: p. 8. There is no separate version field; version information can be included in the requirement string.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["softwareRequirement"],
+      "properties": {
+        "softwareRequirement": {
+          "type": "string",
+          "description": "Software requirement [1]. Another required package, library, toolbox, etc., including relevant version information.",
+          "examples": ["Control System Toolbox (for Simulink)", "VehicleInterfaces (for Modelica)", "NumPy 1.18.1 (for Python)"]
+        },
+        "alternativeSoftwareRequirement": {
+          "$ref": "#/$defs/OtherSoftwareRequirement",
+          "description": "Alternative software requirement [0..1]. Recursively interchangeable requirement."
+        }
+      }
+    },
+    "ReferenceHardwareAndPerformance": {
+      "$comment": "SOURCE: pp. 8-9.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hardwareCharacteristics"],
+      "properties": {
+        "referenceHardwareName": {
+          "type": "string",
+          "description": "Name of the reference hardware [0..1]. Understandable name of a machine known to suit the model."
+        },
+        "timeFactor": {
+          "type": "string",
+          "description": "Time factor [0..1]. Execution duration divided by simulated duration on this hardware. Intended for complete time-based dynamic models, not individual blocks. Can inform HIL suitability, but is not a real-time guarantee.",
+          "examples": ["0.9", "2/1"]
+        },
+        "hardwareCharacteristics": {
+          "$ref": "#/$defs/HardwareCharacteristics",
+          "description": "Characteristics of the reference hardware [1]. Required even though all child fields are optional."
+        }
+      }
+    },
+    "HardwareCharacteristics": {
+      "$comment": "SOURCE: p. 9. Hardware measurements should have clear units. Fields remain free-form strings.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cpu": {
+          "type": "string",
+          "description": "CPU [0..1]. Processor description; not limited to clock frequency."
+        },
+        "ram": {
+          "type": "string",
+          "description": "RAM [0..1]. Memory description; not limited to capacity."
+        },
+        "dataStorage": {
+          "type": "string",
+          "description": "Data storage [0..1]. Storage description; not limited to capacity."
+        },
+        "otherHardwareCharacteristics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Other hardware characteristics [0..*]. May include HPC characteristics."
+        }
+      }
+    },
+    "ContentAndComputation": {
+      "title": "III. Content and computation",
+      "$comment": "SOURCE: pp. 10-12. Category wrapper is a JSON mapping choice.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["behavior"],
+      "properties": {
+        "modellingChoices": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/ModellingChoice"},
+          "description": "Modelling choice [0..*]."
+        },
+        "behavior": {
+          "$ref": "#/$defs/Behavior",
+          "description": "Behavior [1]."
+        },
+        "defaultSolver": {
+          "$ref": "#/$defs/DefaultSolver",
+          "description": "Default solver [0..1]."
+        }
+      }
+    },
+    "ModellingChoice": {
+      "$comment": "SOURCE: p. 10. The source does not require either text or formalization to be populated; an empty object is therefore allowed.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "explicativeText": {
+          "type": "string",
+          "description": "Explicative text [0..1]. Natural-language modelling choice, hypothesis, or limitation."
+        },
+        "formalizations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Formalization"},
+          "description": "Formalization [0..*]."
+        }
+      }
+    },
+    "Formalization": {
+      "$comment": "SOURCE: pp. 10-11. Modelling-field examples are recommended basic values, not a closed enumeration.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modellingField", "typeOfChoice"],
+      "properties": {
+        "modellingField": {
+          "type": "string",
+          "description": "Modelling field [1]. Domain of a phenomenon that is modelled or neglected.",
+          "examples": ["Solid mechanics", "Mechanics of materials", "Fluid mechanics", "Acoustics and vibrations", "Electromagnetics", "Thermal", "Chemistry", "Optics", "Biology", "Sociology"]
+        },
+        "typeOfChoice": {
+          "type": "string",
+          "enum": ["model", "neglect"],
+          "description": "Type of choice [1]. Whether the phenomenon is taken into account or neglected."
+        },
+        "timeScale": {
+          "type": "string",
+          "description": "Time scale [0..1]. Characteristic time of the modelled or neglected phenomenon, with a clear time unit.",
+          "examples": ["40.0ms"]
+        }
+      }
+    },
+    "Behavior": {
+      "$comment": "SOURCE: p. 11. Both collections may be empty or absent. Model-type keywords are recommendations, not an enumeration or a mutually exclusive classification.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "behaviorSpecifications": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Behavior specification [0..*]. Text, system requirements, or document links. Not restricted to URI strings."
+        },
+        "modelTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": ["Discrete", "Continuous", "Deterministic", "Stochastic", "Static", "Dynamic", "Causal", "Acausal", "Bond graph", "Block diagram", "Transfer function", "State Machine diagram", "Neural network", "Empirical data"]
+          },
+          "description": "Model type [0..*]. Open-vocabulary keywords characterizing the simulation model."
+        }
+      }
+    },
+    "DefaultSolver": {
+      "$comment": "SOURCE: pp. 11-12. All child fields are optional. No default value is assigned to embedded. Unit parsing and physical consistency of step size with phenomenon timescales require semantic checks outside JSON Schema.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "solverName": {
+          "type": "string",
+          "description": "Solver name [0..1]. Default solver for computing states over time, where ordinary differential equations are defined.",
+          "examples": ["ode4 (Runge-Kutta)", "Rkfix2", "Euler"]
+        },
+        "stepSize": {
+          "type": "string",
+          "description": "Step size [0..1]. Variable, or a fixed numerical value with clear time units. Should be consistent with modelled and neglected timescales.",
+          "examples": ["Variable", "1ms", "0.1 s"]
+        },
+        "embedded": {
+          "type": "string",
+          "enum": ["Yes", "No"],
+          "description": "Embedded [0..1]. Yes: solver is included in the model file. No: a simulation tool must provide it. Absence means unspecified."
+        }
+      }
+    },
+    "PortsInternalVariablesAndParameters": {
+      "title": "IV. Ports, internal variables, and parameters",
+      "$comment": "SOURCE: pp. 13-16. Category wrapper is a JSON mapping choice. All three explicitly specified child groups are mandatory.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ports", "internalVariables", "parameters"],
+      "properties": {
+        "ports": {"$ref": "#/$defs/Ports"},
+        "internalVariables": {"$ref": "#/$defs/InternalVariables"},
+        "parameters": {"$ref": "#/$defs/Parameters"}
+      }
+    },
+    "Ports": {
+      "$comment": "SOURCE: p. 13. Variables may be exposed directly at the model interface or through named ports.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "variables": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Variable"},
+          "description": "Variable [0..*]. Direct interface variables."
+        },
+        "ports": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Port"},
+          "description": "Port [0..*]. Named interface groups."
+        }
+      }
+    },
+    "ValueDescription": {
+      "$comment": "SOURCE: pp. 13-16. IMPLEMENTATION FACTORING: shared fields of Variable, InternalVariable, and Parameter; not an abstract class declared by MIC. Intentionally open here so allOf can extend it. Each concrete definition closes its evaluated properties with unevaluatedProperties:false. No minLength, name uniqueness, array grammar, unit vocabulary, or validity-domain grammar is imposed.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name [1]. Name of the variable, internal variable, or parameter."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description [0..1]. Natural-language explanation of the value."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type [0..1]. Describes the model value's datatype, including scalar, array, bus, or heterogeneous data; not a JSON Schema datatype declaration.",
+          "examples": ["boolean", "real", "bus", "M-by-N array of scalars"]
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit [0..1]. SI symbols are recommended basic values. May describe different units for an array.",
+          "examples": ["Pa", "[W; V]"]
+        },
+        "defaultValue": {
+          "type": "string",
+          "description": "Default value [0..1]. Textual scalar or array value. Do not repeat units, which have their own field.",
+          "examples": ["70.00", "True", "[3; 9.0]"]
+        },
+        "validityDomain": {
+          "type": "string",
+          "description": "Validity domain [0..1]. Textual interval, union, discrete set, or other domain expression. MIC supplies no formal grammar.",
+          "examples": ["[0; +inf]", "]-1; 2] U [4; 8[", "{1; 3; 6; 9}"]
+        }
+      }
+    },
+    "Variable": {
+      "description": "Interface variable, directly exposed or contained in a port. An output default is its initial value that cannot be computed at the first time step. An input default's meaning should be documented. Input validity domains delimit values considered during development and any associated validated output guarantees; an output domain's meaning should be documented.",
+      "$comment": "SOURCE: pp. 13-14. In/Out is optional and applies to causal simulation. Absence is unspecified and does not create an InOut enumeration literal.",
+      "allOf": [
+        {"$ref": "#/$defs/ValueDescription"},
+        {
+          "properties": {
+            "inOut": {
+              "type": "string",
+              "enum": ["In", "Out"],
+              "description": "In/Out [0..1]. Input or output in causal simulation."
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Port": {
+      "$comment": "SOURCE: pp. 13-14. Variable membership is explicit in the structural table. Recursive port membership is explicit in the attribute table; its blank type cell is interpreted as Port. JSON mapping uses nested containment, without identity/reference semantics.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name [1]. Name of the interface port."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description [0..1]. Meaning of the port."
+        },
+        "variables": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Variable"},
+          "description": "Variable [0..*]. Variables within this port."
+        },
+        "ports": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Port"},
+          "description": "Port [0..*]. Nested ports; recursively the same structure."
+        }
+      }
+    },
+    "InternalVariables": {
+      "$comment": "SOURCE: pp. 13, 15.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "internalVariables": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/InternalVariable"},
+          "description": "Internal variable [0..*]. Ungrouped internal variables."
+        },
+        "groups": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/GroupOfInternalVariables"},
+          "description": "Group of internal variables [0..*]."
+        }
+      }
+    },
+    "InternalVariable": {
+      "description": "A variable computed within the model and not exposed through an output port. May be an important simulation result. Has the six shared value fields and no In/Out field.",
+      "$comment": "SOURCE: p. 15. Shared schema reuse is an implementation choice, not source-declared inheritance.",
+      "allOf": [{"$ref": "#/$defs/ValueDescription"}],
+      "unevaluatedProperties": false
+    },
+    "GroupOfInternalVariables": {
+      "$comment": "SOURCE: p. 15. SOURCE GAP / PROFILE DECISION: grouping internal variables is explicitly described, but the member-variable relationship and its multiplicity are omitted from the tables. This mapping supplies internalVariables:[InternalVariable] with 0..* cardinality as an interpretation. Recursive groups are explicit; their blank type cell is interpreted as this same group type. No unique membership rule is asserted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name [1]. Arbitrary organizational group, e.g. by physics, source-code structure, or datatype."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description [0..1]."
+        },
+        "internalVariables": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/InternalVariable"},
+          "description": "Member internal variables [inferred 0..*]. Group membership is implied by prose, but this relationship's multiplicity is not explicitly specified."
+        },
+        "groups": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/GroupOfInternalVariables"},
+          "description": "Group of internal variables [0..*]. Nested groups."
+        }
+      }
+    },
+    "Parameters": {
+      "$comment": "SOURCE: pp. 13, 16.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parameters": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Parameter"},
+          "description": "Parameter [0..*]. Ungrouped parameters."
+        },
+        "groups": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/GroupOfParameters"},
+          "description": "Group of parameters [0..*]."
+        }
+      }
+    },
+    "Parameter": {
+      "description": "A relatively constant, generally user-defined value that does not appear at the model interface. May be set in source code or a GUI and may occasionally change during simulation. Its classification versus an internal variable can be arbitrary. Has the six shared value fields and no In/Out field.",
+      "$comment": "SOURCE: p. 16. Shared schema reuse is an implementation choice, not source-declared inheritance.",
+      "allOf": [{"$ref": "#/$defs/ValueDescription"}],
+      "unevaluatedProperties": false
+    },
+    "GroupOfParameters": {
+      "$comment": "SOURCE: p. 16. SOURCE GAP / PROFILE DECISION: grouping parameters is explicitly described, but the member-parameter relationship and its multiplicity are omitted from the tables. This mapping supplies parameters:[Parameter] with 0..* cardinality as an interpretation. Recursive groups are explicit; their blank type cell is interpreted as this same group type. No unique membership rule is asserted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name [1]. Name of the parameter group."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description [0..1]."
+        },
+        "parameters": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Parameter"},
+          "description": "Member parameters [inferred 0..*]. Group membership is implied by prose, but this relationship's multiplicity is not explicitly specified."
+        },
+        "groups": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/GroupOfParameters"},
+          "description": "Group of parameters [0..*]. Nested groups."
+        }
+      }
+    },
+    "VerificationAndValidation": {
+      "title": "V. Verification and validation",
+      "$comment": "SOURCE: p. 17. Category wrapper is a JSON mapping choice. No test-to-metric association, pass/fail field, evidence provenance, or score scale is specified.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tests": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Test"},
+          "description": "Test [0..*]."
+        },
+        "metrics": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Metric"},
+          "description": "Metric [0..*]."
+        }
+      }
+    },
+    "Test": {
+      "$comment": "SOURCE: p. 17. Method examples are not a closed enumeration.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Method [1]. Keyword identifying the verification/validation approach.",
+          "examples": ["Desk Checking", "Turing Test", "Graphical Comparisons", "Cause-Effect Graphing", "Boundary Analysis", "Lambda Calculus"]
+        },
+        "documentation": {
+          "type": "string",
+          "description": "Documentation [0..1]. Identifies test procedures, results, or related documentation; need not be a URL."
+        }
+      }
+    },
+    "Metric": {
+      "$comment": "SOURCE: p. 17. Score remains a string; no numeric range or universal scoring scale is imposed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "score"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name [1]. Name of a quality metric, e.g. Fidelity."
+        },
+        "score": {
+          "type": "string",
+          "description": "Score [1]. Score obtained by the simulation model for the named metric."
+        }
+      }
+    }
+  }
+}
