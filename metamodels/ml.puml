@@ -1,0 +1,178 @@
+@startuml
+' MIC for an ML model: same skeleton as the executable-model diagram, ML roles added
+hide empty members
+scale max 3508*2480
+' left to right direction
+
+class MIC <<root>> {
+  +generalInformation
+  +integration
+  +contentAndComputation
+  +portsInternalVariablesAndParameters
+  +verificationAndValidation
+}
+
+class GeneralInformation {
+  +name : string
+  +description : string
+  +owner : string
+  +lifeCycleState : string
+  +version : string
+  +versionDate : string
+  +confidentiality : string[]
+  +license : string[]
+}
+
+class Integration {
+  +fileFormat : string  ' e.g. ONNX
+  +runtime : string
+}
+class Software {
+}
+class ReferenceHardwareAndPerformance {
+}
+
+class ContentAndComputation {
+  +mlTask : string
+  +modelCategory : string
+}
+class Architecture {
+  +family : string
+}
+class Layer {
+  +name : string
+  +type : string
+  +order : integer
+}
+class TrainingProcedure {
+  +algorithm : string
+  +randomSeed : string
+}
+class DatasetUse {
+  +name : string
+  +role : enum[train|validation|test|evaluation]
+  +reference : string
+}
+
+class PortsInternalVariablesAndParameters {
+}
+class Ports {
+}
+class Port {
+  +name : string
+  +description : string
+}
+class ValueDescription {
+}
+class Variable {
+  +inOut : enum[In|Out]
+  +role : enum[inputFeature|target|label|auxiliary]
+}
+class InternalVariables {
+}
+class InternalVariable {
+  +kind : enum[activation|attention|embedding|latent]
+  +producedBy : string
+}
+class GroupOfInternalVariables {
+  +name : string
+  +description : string
+}
+class Parameters {
+}
+class Parameter {
+}
+class Hyperparameter {
+  +category : enum[architecture|optimizer|regularization|training|dataProcessing|inference]
+  +appliesTo : string
+  +value : Value
+  +isTuned : boolean
+  +tuningMethod : enum[manual|gridSearch|randomSearch|bayesian|evolutionary|other]
+  +tuningObjective : string
+  +searchScale : enum[linear|log]
+  +trialsCount : integer
+}
+class SearchSpace <<ValidityDomain>> {
+  +min : Value
+  +max : Value
+  +choices : Value[]
+}
+class LearnedParameter {
+  +kind : enum[weight|bias|embedding|filter|scale|shift]
+  +shape : integer[]
+  +count : integer
+  +dtype : string
+  +initializer : string
+  +frozen : boolean
+  +storageRef : string
+  +checksum : string
+}
+class NonTrainableState {
+  +kind : enum[runningMean|runningVariance|positionalEncoding|buffer]
+  +shape : integer[]
+  +storageRef : string
+}
+class GroupOfParameters {
+  +name : string
+  +description : string
+}
+
+class VerificationAndValidation {
+}
+class Evaluation {
+  +measure : string
+  +value : string
+  +dataset : string
+}
+class TrainingEnvelope {
+  +statistic : enum[minMax|percentile|convexHull|density]
+}
+
+MIC *-- "1" GeneralInformation : generalInformation
+MIC *-- "1" Integration : integration
+MIC *-- "1" ContentAndComputation : contentAndComputation
+MIC *-- "1" PortsInternalVariablesAndParameters : portsInternalVariablesAndParameters
+MIC *-- "1" VerificationAndValidation : verificationAndValidation
+
+Integration *-- "1" Software : software
+Integration *-- "0..*" ReferenceHardwareAndPerformance : referenceHardwareAndPerformance
+
+ContentAndComputation *-- "1" Architecture : architecture
+ContentAndComputation *-- "1" TrainingProcedure : training
+Architecture *-- "1..*" Layer : layers
+Layer *-- "0..*" Layer : subLayers
+Layer ..> GroupOfInternalVariables : outputs
+Layer ..> GroupOfParameters : parameters
+TrainingProcedure *-- "1..*" DatasetUse : datasets
+
+PortsInternalVariablesAndParameters *-- "1" Ports : ports
+PortsInternalVariablesAndParameters *-- "1" InternalVariables : internalVariables
+PortsInternalVariablesAndParameters *-- "1" Parameters : parameters
+
+Ports *-- "0..*" Variable : variables
+Ports *-- "0..*" Port : ports
+Port *-- "0..*" Variable : variables
+Port *-- "0..*" Port : ports
+
+InternalVariables *-- "0..*" InternalVariable : internalVariables
+InternalVariables *-- "0..*" GroupOfInternalVariables : groups
+GroupOfInternalVariables *-- "0..*" InternalVariable : internalVariables
+GroupOfInternalVariables *-- "0..*" GroupOfInternalVariables : groups
+
+Parameters *-- "0..*" Parameter : parameters
+Parameters *-- "0..*" GroupOfParameters : groups
+GroupOfParameters *-- "0..*" Parameter : parameters
+GroupOfParameters *-- "0..*" GroupOfParameters : groups
+
+ValueDescription <|-- Variable
+ValueDescription <|-- InternalVariable
+ValueDescription <|-- Parameter
+Parameter <|-- Hyperparameter
+Parameter <|-- LearnedParameter
+Parameter <|-- NonTrainableState
+Hyperparameter *-- "0..1" SearchSpace : searchSpace
+Hyperparameter ..> TrainingProcedure : used by
+
+VerificationAndValidation *-- "0..*" Evaluation : evaluations
+VerificationAndValidation *-- "0..*" TrainingEnvelope : validityDomains
+@enduml

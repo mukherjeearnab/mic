@@ -1,0 +1,168 @@
+@startuml
+' MIC v2.0 class diagram, generated from mic-v2.schema.json
+hide empty members
+scale max 3508*2480
+left to right direction
+
+class MIC <<root>> {
+  +generalInformation
+  +integration
+  +contentAndComputation
+  +portsInternalVariablesAndParameters
+  +verificationAndValidation
+}
+class GeneralInformation {
+  +name : string
+  +description : string
+  +owner : string
+  +lifeCycleState : string
+  +version : string
+  +versionDate : string
+  +confidentiality : string[]
+  +license : string[]
+}
+class Integration {
+}
+class Software {
+}
+class Language {
+  +languageName : string
+  +languageVersion : string
+}
+class FileFormat {
+  +fileFormatName : string
+  +fileFormatVersion : string
+}
+class RequiredSimulationTool {
+  +toolName : string
+  +toolVersion : string
+}
+class RequiredCompiler {
+  +compilerName : string
+  +compilerVersion : string
+}
+class RequiredOperatingSystem {
+  +operatingSystemName : string
+  +operatingSystemVersion : string
+}
+class OtherSoftwareRequirement {
+  +softwareRequirement : string
+}
+class ReferenceHardwareAndPerformance {
+  +referenceHardwareName : string
+  +timeFactor : string
+}
+class HardwareCharacteristics {
+  +cpu : string
+  +ram : string
+  +dataStorage : string
+  +otherHardwareCharacteristics : string[]
+}
+class ContentAndComputation {
+}
+class ModellingChoice {
+  +explicativeText : string
+}
+class Formalization {
+  +modellingField : string
+  +typeOfChoice : enum
+  +timeScale : string
+}
+class Behavior {
+  +behaviorSpecifications : string[]
+  +modelTypes : string[]
+}
+class DefaultSolver {
+  +solverName : string
+  +stepSize : string
+  +embedded : enum
+}
+class PortsInternalVariablesAndParameters {
+}
+class Ports {
+}
+class ValueDescription {
+  +name : string
+  +description : string
+  +type : string
+  +unit : string
+  +defaultValue : string
+  +validityDomain : string
+}
+class Variable {
+  +inOut : enum
+}
+class Port {
+  +name : string
+  +description : string
+}
+class InternalVariables {
+}
+class InternalVariable {
+}
+class GroupOfInternalVariables {
+  +name : string
+  +description : string
+}
+class Parameters {
+}
+class Parameter {
+}
+class GroupOfParameters {
+  +name : string
+  +description : string
+}
+class VerificationAndValidation {
+}
+class Test {
+  +method : string
+  +documentation : string
+}
+class Metric {
+  +name : string
+  +score : string
+}
+
+MIC *-- "1" GeneralInformation : generalInformation
+MIC *-- "1" Integration : integration
+MIC *-- "1" ContentAndComputation : contentAndComputation
+MIC *-- "1" PortsInternalVariablesAndParameters : portsInternalVariablesAndParameters
+MIC *-- "1" VerificationAndValidation : verificationAndValidation
+Integration *-- "1" Software : software
+Integration *-- "0..*" ReferenceHardwareAndPerformance : referenceHardwareAndPerformance
+Software *-- "1..*" Language : languages
+Software *-- "1..*" FileFormat : fileFormats
+Software *-- "0..*" RequiredSimulationTool : requiredSimulationTools
+Software *-- "0..*" RequiredCompiler : requiredCompilers
+Software *-- "0..*" RequiredOperatingSystem : requiredOperatingSystems
+Software *-- "0..*" OtherSoftwareRequirement : otherSoftwareRequirements
+RequiredSimulationTool *-- "0..1" RequiredSimulationTool : alternativeTool
+RequiredCompiler *-- "0..1" RequiredCompiler : alternativeCompiler
+RequiredOperatingSystem *-- "0..1" RequiredOperatingSystem : alternativeOperatingSystem
+OtherSoftwareRequirement *-- "0..1" OtherSoftwareRequirement : alternativeSoftwareRequirement
+ReferenceHardwareAndPerformance *-- "1" HardwareCharacteristics : hardwareCharacteristics
+ContentAndComputation *-- "0..*" ModellingChoice : modellingChoices
+ContentAndComputation *-- "1" Behavior : behavior
+ContentAndComputation *-- "0..1" DefaultSolver : defaultSolver
+ModellingChoice *-- "0..*" Formalization : formalizations
+PortsInternalVariablesAndParameters *-- "1" Ports : ports
+PortsInternalVariablesAndParameters *-- "1" InternalVariables : internalVariables
+PortsInternalVariablesAndParameters *-- "1" Parameters : parameters
+Ports *-- "0..*" Variable : variables
+Ports *-- "0..*" Port : ports
+ValueDescription <|-- Variable
+Port *-- "0..*" Variable : variables
+Port *-- "0..*" Port : ports
+InternalVariables *-- "0..*" InternalVariable : internalVariables
+InternalVariables *-- "0..*" GroupOfInternalVariables : groups
+ValueDescription <|-- InternalVariable
+GroupOfInternalVariables *-- "0..*" InternalVariable : internalVariables
+GroupOfInternalVariables *-- "0..*" GroupOfInternalVariables : groups
+Parameters *-- "0..*" Parameter : parameters
+Parameters *-- "0..*" GroupOfParameters : groups
+ValueDescription <|-- Parameter
+GroupOfParameters *-- "0..*" Parameter : parameters
+GroupOfParameters *-- "0..*" GroupOfParameters : groups
+VerificationAndValidation *-- "0..*" Test : tests
+VerificationAndValidation *-- "0..*" Metric : metrics
+@enduml

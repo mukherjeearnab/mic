@@ -1,0 +1,204 @@
+@startuml
+' ValueDescription sub-diagram: ValueDescription, its subclasses and the classes it composes
+hide empty members
+left to right direction
+
+class ValueDescription {
+  +name : string
+  +description : string
+  +semanticIRI : string[]
+  +quantityKind : string
+}
+
+' class Variable {
+'   +inOut : enum
+'   +causality : enum
+'   +variability : enum
+'   +start : Value
+'   +nominal : Value
+'   +role : enum
+'   +datasetColumn : string
+' }
+
+' class InternalVariable {
+'   +isState : boolean
+'   +derivativeOf : string
+' }
+
+' class Parameter {
+'   +kind : enum
+'   +tunable : boolean
+'   +calibrated : boolean
+' }
+
+class DataType {
+  +typeName : string
+}
+class ScalarType {
+}
+class RealType {
+  +precision : enum
+}
+class IntegerType {
+  +bits : integer
+  +signed : boolean
+}
+class BooleanType {
+}
+class StringType {
+  +encoding : string
+}
+class EnumerationType {
+  +items : string[]
+}
+class CompositeType {
+}
+class ArrayType {
+  +rank : integer
+}
+class TensorType {
+  +layout : string
+  +memoryOrder : enum
+}
+class Dimension {
+  +name : string
+  +size : integer
+  +isDynamic : boolean
+  +semantic : enum
+}
+class RecordType {
+}
+class TimeSeriesType {
+  +samplingPeriod : string
+  +horizon : integer
+}
+class MediaType {
+  +kind : enum
+  +format : string
+}
+
+class Unit {
+  +symbol : string
+  +ucumCode : string
+  +qudtIRI : string
+'   +displayUnit : string
+'   +factor : number
+'   +offset : number
+}
+
+class Value {
+}
+class ScalarValue {
+  +literal : string
+}
+class ArrayValue {
+}
+class RecordValue {
+}
+class ReferenceValue {
+  +uri : string
+  +format : string
+  +checksum : string
+}
+
+class ValidityDomain {
+  +description : string
+  +kind : enum
+}
+class RangeDomain {
+  +minInclusive : boolean
+  +maxInclusive : boolean
+}
+class SetDomain {
+}
+class ConstraintDomain {
+  +expression : string
+  +language : string
+}
+class CompositeDomain {
+  +operator : enum
+}
+class TrainingEnvelope {
+  +datasetRef : string
+  +statistic : enum
+  +coverage : number
+}
+
+class Uncertainty {
+  +type : enum
+  +distribution : enum
+  +mean : number
+  +stdDev : number
+  +confidenceLevel : number
+  +method : string
+}
+
+' class Preprocessing {
+'   +order : integer
+' }
+' class Normalization {
+'   +mean : number[]
+'   +std : number[]
+' }
+' class Scaling {
+'   +min : number
+'   +max : number
+' }
+' class Encoding {
+'   +scheme : enum
+' }
+' class Resampling {
+'   +method : string
+' }
+
+ValueDescription <|-- Variable
+ValueDescription <|-- InternalVariable
+ValueDescription <|-- Parameter
+
+ValueDescription *-- "1" DataType : dataType
+ValueDescription *-- "0..1" Unit : unit
+ValueDescription *-- "0..1" Value : defaultValue
+ValueDescription *-- "0..*" ValidityDomain : validityDomains
+ValueDescription *-- "0..1" Uncertainty : uncertainty
+' Variable *-- "0..*" Preprocessing : preprocessing
+
+DataType <|-- ScalarType
+DataType <|-- CompositeType
+ScalarType <|-- RealType
+ScalarType <|-- IntegerType
+ScalarType <|-- BooleanType
+ScalarType <|-- StringType
+ScalarType <|-- EnumerationType
+CompositeType <|-- ArrayType
+ArrayType <|-- TensorType
+CompositeType <|-- RecordType
+CompositeType <|-- TimeSeriesType
+CompositeType <|-- MediaType
+ArrayType *-- "1" ScalarType : elementType
+ArrayType *-- "1..*" Dimension : shape
+RecordType *-- "1..*" ValueDescription : fields
+TimeSeriesType *-- "1" DataType : sampleType
+
+Value <|-- ScalarValue
+Value <|-- ArrayValue
+Value <|-- RecordValue
+Value <|-- ReferenceValue
+ArrayValue *-- "0..*" Value : elements
+RecordValue *-- "0..*" Value : fields
+
+ValidityDomain <|-- RangeDomain
+ValidityDomain <|-- SetDomain
+ValidityDomain <|-- ConstraintDomain
+ValidityDomain <|-- CompositeDomain
+ValidityDomain <|-- TrainingEnvelope
+RangeDomain *-- "0..1" Value : min
+RangeDomain *-- "0..1" Value : max
+SetDomain *-- "1..*" Value : members
+CompositeDomain *-- "1..*" ValidityDomain : operands
+Uncertainty *-- "0..1" RangeDomain : interval
+
+' Preprocessing <|-- Normalization
+' Preprocessing <|-- Scaling
+' Preprocessing <|-- Encoding
+' Preprocessing <|-- Resampling
+@enduml

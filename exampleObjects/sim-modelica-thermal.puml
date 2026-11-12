@@ -1,0 +1,187 @@
+@startuml
+' Complete object diagram: ThermalPlant as an instance of MIC v2.0
+' (metamodel: sim.puml + valueDescription.puml)
+' Enum literals (inOut, causality, variability, kind, precision, ...) are assumptions:
+' the metamodel does not list the allowed values.
+left to right direction
+hide empty members
+skinparam objectBackgroundColor #FFFFFF
+
+!procedure $vdparts($id, $unit, $sym, $ucum, $qudt, $def)
+object "<size:10>$id : RealType" as $id##_t {
+  typeName = "Real"
+  precision = "double"
+}
+object "<size:10>$id : Unit" as $id##_u {
+  symbol = "$sym"
+  ucumCode = "$ucum"
+  qudtIRI = "$qudt"
+}
+$id *-- $id##_t : dataType
+$id *-- $id##_u : unit
+!if ($def != "")
+object "<size:10>$id : ScalarValue" as $id##_dv {
+  literal = "$def"
+}
+$id *-- $id##_dv : defaultValue
+!endif
+!endprocedure
+
+' ---------------- MIC root ----------------
+object "mic : MIC" as mic
+object "generalInformation : GeneralInformation" as gi {
+  name = "ThermalPlant"
+  description = "Simple first-order lumped thermal model: C*dT/dt = P - (T-Ta)/R"
+  owner = "TODO"
+  lifeCycleState = "TODO"
+  version = "TODO"
+  versionDate = "TODO"
+  confidentiality = []
+  license = []
+}
+object "integration : Integration" as integ
+object "software : Software" as sw
+object "lang : Language" as lang {
+  languageName = "Modelica"
+  languageVersion = "TODO"
+}
+object "ff : FileFormat" as ff {
+  fileFormatName = "Modelica source (.mo)"
+  fileFormatVersion = "TODO"
+}
+object "contentAndComputation : ContentAndComputation" as cc
+object "mc : ModellingChoice" as mc {
+  explicativeText = "Lumped single-capacitance thermal system with one resistance to ambient"
+}
+object "form : Formalization" as form {
+  modellingField = "Thermal"
+  typeOfChoice = "TODO"
+  timeScale = "continuous time"
+}
+object "behavior : Behavior" as beh {
+  behaviorSpecifications = ["C*der(temperature) = power - (temperature - ambient)/R"]
+  modelTypes = ["ODE", "first-order", "linear", "continuous-time"]
+}
+object "pivp : PortsInternalVariablesAndParameters" as pivp
+object "ports : Ports" as ports
+object "internalVariables : InternalVariables\n(empty)" as iv
+object "parameters : Parameters" as params
+object "vv : VerificationAndValidation\n(no tests, no metrics)" as vv
+
+mic *-- gi : generalInformation
+mic *-- integ : integration
+mic *-- cc : contentAndComputation
+mic *-- pivp : portsInternalVariablesAndParameters
+mic *-- vv : verificationAndValidation
+integ *-- sw : software
+sw *-- lang : languages
+sw *-- ff : fileFormats
+cc *-- mc : modellingChoices
+mc *-- form : formalizations
+cc *-- beh : behavior
+pivp *-- ports : ports
+pivp *-- iv : internalVariables
+pivp *-- params : parameters
+
+' ---------------- Variables (ValueDescription <|-- Variable) ----------------
+object "power : Variable" as power {
+  name = "power"
+  description = "Applied power"
+  semanticIRI = []
+  quantityKind = "Power"
+  inOut = "input"
+  causality = "input"
+  variability = "continuous"
+}
+object "ambient : Variable" as ambient {
+  name = "ambient"
+  description = "Ambient temperature"
+  semanticIRI = []
+  quantityKind = "ThermodynamicTemperature"
+  inOut = "input"
+  causality = "input"
+  variability = "continuous"
+}
+object "temperature : Variable" as temperature {
+  name = "temperature"
+  description = "Simulated temperature"
+  semanticIRI = []
+  quantityKind = "ThermodynamicTemperature"
+  inOut = "output"
+  causality = "output"
+  variability = "continuous"
+}
+ports *-- power : variables
+ports *-- ambient : variables
+ports *-- temperature : variables
+
+$vdparts(power, W, W, W, "http://qudt.org/vocab/unit/W", "")
+$vdparts(ambient, degC, "°C", Cel, "http://qudt.org/vocab/unit/DEG_C", "")
+$vdparts(temperature, degC, "°C", Cel, "http://qudt.org/vocab/unit/DEG_C", "")
+
+' ---------------- Parameters (ValueDescription <|-- Parameter) ----------------
+object "R : Parameter" as R {
+  name = "R"
+  description = "Thermal resistance"
+  semanticIRI = []
+  quantityKind = "ThermalResistance"
+  kind = "physical"
+  tunable = true
+  calibrated = false
+}
+object "C : Parameter" as C {
+  name = "C"
+  description = "Thermal capacitance"
+  semanticIRI = []
+  quantityKind = "HeatCapacity"
+  kind = "physical"
+  tunable = true
+  calibrated = false
+}
+object "T_start : Parameter" as Tstart {
+  name = "T_start"
+  description = "Initial temperature (initial equation: temperature = T_start)"
+  semanticIRI = []
+  quantityKind = "ThermodynamicTemperature"
+  kind = "initial"
+  tunable = true
+  calibrated = false
+}
+params *-- R : parameters
+params *-- C : parameters
+params *-- Tstart : parameters
+
+$vdparts(R, "K/W", "K/W", "K/W", "http://qudt.org/vocab/unit/K-PER-W", "0.5")
+$vdparts(C, "J/K", "J/K", "J/K", "http://qudt.org/vocab/unit/J-PER-K", "100.0")
+$vdparts(Tstart, degC, "°C", Cel, "http://qudt.org/vocab/unit/DEG_C", "1000.0")
+
+' ---------------- Validity domains (R > 0, C > 0) ----------------
+object "R_domain : RangeDomain" as R_dom {
+  description = "R > 0"
+  kind = "range"
+  minInclusive = false
+  maxInclusive = false
+}
+object "R_min : ScalarValue" as R_min {
+  literal = "0"
+}
+R *-- R_dom : validityDomains
+R_dom *-- R_min : min
+
+object "C_domain : RangeDomain" as C_dom {
+  description = "C > 0"
+  kind = "range"
+  minInclusive = false
+  maxInclusive = false
+}
+object "C_min : ScalarValue" as C_min {
+  literal = "0"
+}
+C *-- C_dom : validityDomains
+C_dom *-- C_min : min
+
+' Not instantiated (0..1 / 0..* in the metamodel, no source info):
+' Uncertainty, OtherSoftwareRequirement, RequiredSimulationTool, RequiredCompiler,
+' RequiredOperatingSystem, ReferenceHardwareAndPerformance, DefaultSolver, Test, Metric,
+' InternalVariable, GroupOf*, Port (nested)
+@enduml

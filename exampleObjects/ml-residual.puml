@@ -1,0 +1,693 @@
+@startuml
+' Complete object diagram: ResidualMLP (PyTorch) as an instance of the ML MIC metamodel
+' (ml.puml) extended with the ValueDescription sub-diagram (valueDescription.puml).
+' Sources: models.py, training.py, normalization.py, inference.py, default.yaml
+' Enum literals follow ml.puml where listed; otherwise they are assumptions. "TODO" = not in the sources.
+left to right direction
+hide empty members
+
+' ===================== helper procedures (ValueDescription parts) =====================
+!procedure $real($id, $prec)
+object "<size:10>$id : RealType" as $id##_t {
+  typeName = "Real"
+  precision = "$prec"
+}
+$id *-- $id##_t : dataType
+!endprocedure
+
+!procedure $int($id, $bits, $signed)
+object "<size:10>$id : IntegerType" as $id##_t {
+  typeName = "Integer"
+  bits = $bits
+  signed = $signed
+}
+$id *-- $id##_t : dataType
+!endprocedure
+
+!procedure $unit($id, $sym, $ucum, $qudt)
+object "<size:10>$id : Unit" as $id##_u {
+  symbol = "$sym"
+  ucumCode = "$ucum"
+  qudtIRI = "$qudt"
+}
+$id *-- $id##_u : unit
+!endprocedure
+
+' float32 tensor, rank 2
+!procedure $tensor2($id, $n1, $s1, $dyn1, $sem1, $n2, $s2, $dyn2, $sem2)
+object "<size:10>$id : TensorType" as $id##_t {
+  typeName = "Tensor"
+  rank = 2
+  layout = "dense"
+  memoryOrder = "rowMajor"
+}
+object "<size:10>$id : RealType (elementType)" as $id##_e {
+  typeName = "Real"
+  precision = "single (float32)"
+}
+object "<size:10>$id : Dimension" as $id##_d1 {
+  name = "$n1"
+  size = $s1
+  isDynamic = $dyn1
+  semantic = "$sem1"
+}
+object "<size:10>$id : Dimension" as $id##_d2 {
+  name = "$n2"
+  size = $s2
+  isDynamic = $dyn2
+  semantic = "$sem2"
+}
+$id *-- $id##_t : dataType
+$id##_t *-- $id##_e : elementType
+$id##_t *-- $id##_d1 : shape
+$id##_t *-- $id##_d2 : shape
+!endprocedure
+
+' float32 tensor, rank 1
+!procedure $tensor1($id, $n1, $s1, $dyn1, $sem1)
+object "<size:10>$id : TensorType" as $id##_t {
+  typeName = "Tensor"
+  rank = 1
+  layout = "dense"
+  memoryOrder = "rowMajor"
+}
+object "<size:10>$id : RealType (elementType)" as $id##_e {
+  typeName = "Real"
+  precision = "single (float32)"
+}
+object "<size:10>$id : Dimension" as $id##_d1 {
+  name = "$n1"
+  size = $s1
+  isDynamic = $dyn1
+  semantic = "$sem1"
+}
+$id *-- $id##_t : dataType
+$id##_t *-- $id##_e : elementType
+$id##_t *-- $id##_d1 : shape
+!endprocedure
+
+!procedure $ref($id, $uri, $fmt)
+object "<size:10>$id : ReferenceValue" as $id##_v {
+  uri = "$uri"
+  format = "$fmt"
+  checksum = "TODO"
+}
+$id *-- $id##_v : defaultValue
+!endprocedure
+
+!procedure $scalar($id, $lit, $role)
+object "<size:10>$id : ScalarValue" as $id##_v {
+  literal = "$lit"
+}
+$id *-- $id##_v : $role
+!endprocedure
+
+' RangeDomain with optional min / max
+!procedure $range($id, $desc, $min, $minIncl, $max, $maxIncl)
+object "<size:10>$id : RangeDomain" as $id##_rd {
+  description = "$desc"
+  kind = "range"
+  minInclusive = $minIncl
+  maxInclusive = $maxIncl
+}
+$id *-- $id##_rd : validityDomains
+!if ($min != "")
+object "<size:10>$id : ScalarValue (min)" as $id##_rmin {
+  literal = "$min"
+}
+$id##_rd *-- $id##_rmin : min
+!endif
+!if ($max != "")
+object "<size:10>$id : ScalarValue (max)" as $id##_rmax {
+  literal = "$max"
+}
+$id##_rd *-- $id##_rmax : max
+!endif
+!endprocedure
+
+' ===================== Root & general =====================
+object "mic : MIC" as mic
+object "generalInformation : GeneralInformation" as gi {
+  name = "ResidualMLP"
+  description = "MLP predicting the residual of the ThermalPlant FMU: T_hybrid = T_sim + ResidualMLP(T_sim, power, ambient)"
+  owner = "TODO"
+  lifeCycleState = "TODO"
+  version = "TODO"
+  versionDate = "TODO"
+  confidentiality = []
+  license = []
+}
+object "integration : Integration" as integ {
+  fileFormat = "PyTorch checkpoint (.pt) + JSON normalization"
+  runtime = "PyTorch (CPU)"
+}
+object "software : Software" as sw
+mic *-- gi : generalInformation
+mic *-- integ : integration
+integ *-- sw : software
+
+' ===================== Content and computation =====================
+object "contentAndComputation : ContentAndComputation" as cc {
+  mlTask = "regression (residual correction of a physical simulation)"
+  modelCategory = "feed-forward neural network (MLP)"
+}
+object "architecture : Architecture" as arch {
+  family = "MLP"
+}
+object "training : TrainingProcedure" as tp {
+  algorithm = "Adam + MSELoss, mini-batch"
+  randomSeed = "42"
+}
+object "ds_train : DatasetUse" as ds1 {
+  name = "residual_dataset (train split)"
+  role = train
+  reference = "data/processed/residual_dataset.csv (80 %)"
+}
+object "ds_val : DatasetUse" as ds2 {
+  name = "residual_dataset (validation split)"
+  role = validation
+  reference = "data/processed/residual_dataset.csv (20 %)"
+}
+mic *-- cc : contentAndComputation
+cc *-- arch : architecture
+cc *-- tp : training
+tp *-- ds1 : datasets
+tp *-- ds2 : datasets
+
+object "L1 : Layer" as L1 {
+  name = "net.0 Linear(3, 32)"
+  type = "Linear"
+  order = 1
+}
+object "A1 : Layer" as A1 {
+  name = "net.1 Tanh"
+  type = "Tanh"
+  order = 2
+}
+object "L2 : Layer" as L2 {
+  name = "net.2 Linear(32, 32)"
+  type = "Linear"
+  order = 3
+}
+object "A2 : Layer" as A2 {
+  name = "net.3 Tanh"
+  type = "Tanh"
+  order = 4
+}
+object "L3 : Layer" as L3 {
+  name = "net.4 Linear(32, 1)"
+  type = "Linear"
+  order = 5
+}
+arch *-- L1 : layers
+arch *-- A1 : layers
+arch *-- L2 : layers
+arch *-- A2 : layers
+arch *-- L3 : layers
+
+' ===================== Ports, internal variables, parameters containers =====================
+object "pivp : PortsInternalVariablesAndParameters" as pivp
+object "ports : Ports" as ports
+object "internalVariables : InternalVariables" as iv
+object "parameters : Parameters" as params
+mic *-- pivp : portsInternalVariablesAndParameters
+pivp *-- ports : ports
+pivp *-- iv : internalVariables
+pivp *-- params : parameters
+
+' ===================== Variables (ValueDescription <|-- Variable) =====================
+object "temperature_sim : Variable" as vTs {
+  name = "temperature_sim"
+  description = "Temperature from the Modelica/FMU simulation"
+  semanticIRI = []
+  quantityKind = "ThermodynamicTemperature"
+  inOut = In
+  role = inputFeature
+}
+object "power : Variable" as vP {
+  name = "power"
+  description = "Applied power"
+  semanticIRI = []
+  quantityKind = "Power"
+  inOut = In
+  role = inputFeature
+}
+object "ambient : Variable" as vA {
+  name = "ambient"
+  description = "Ambient temperature"
+  semanticIRI = []
+  quantityKind = "ThermodynamicTemperature"
+  inOut = In
+  role = inputFeature
+}
+object "predicted_residual : Variable" as vR {
+  name = "predicted_residual"
+  description = "Predicted residual (T_measured - T_sim)"
+  semanticIRI = []
+  quantityKind = "TemperatureDifference"
+  inOut = Out
+  role = target
+}
+ports *-- vTs : variables
+ports *-- vP : variables
+ports *-- vA : variables
+ports *-- vR : variables
+
+$real(vTs, "single (float32)")
+$real(vP, "single (float32)")
+$real(vA, "single (float32)")
+$real(vR, "single (float32)")
+$unit(vTs, "degC", "Cel", "http://qudt.org/vocab/unit/DEG_C")
+$unit(vP, "W", "W", "http://qudt.org/vocab/unit/W")
+$unit(vA, "degC", "Cel", "http://qudt.org/vocab/unit/DEG_C")
+$unit(vR, "degC", "Cel", "http://qudt.org/vocab/unit/DEG_C")
+
+' ===================== Internal variables (activations) =====================
+object "L1_out : GroupOfInternalVariables" as gL1o {
+  name = "net.0 output"
+  description = "Pre-activation values of the first hidden layer"
+}
+object "A1_out : GroupOfInternalVariables" as gA1o {
+  name = "net.1 output"
+  description = "First hidden activations (tanh)"
+}
+object "L2_out : GroupOfInternalVariables" as gL2o {
+  name = "net.2 output"
+  description = "Pre-activation values of the second hidden layer"
+}
+object "A2_out : GroupOfInternalVariables" as gA2o {
+  name = "net.3 output"
+  description = "Second hidden activations (tanh)"
+}
+object "L3_out : GroupOfInternalVariables" as gL3o {
+  name = "net.4 output"
+  description = "Network output (residual)"
+}
+iv *-- gL1o : groups
+iv *-- gA1o : groups
+iv *-- gL2o : groups
+iv *-- gA2o : groups
+iv *-- gL3o : groups
+
+object "z1 : InternalVariable" as ivL1 {
+  name = "z1"
+  description = "Linear output of net.0"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = activation
+  producedBy = "net.0"
+}
+object "a1 : InternalVariable" as ivA1 {
+  name = "a1"
+  description = "tanh output of net.1"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = activation
+  producedBy = "net.1"
+}
+object "z2 : InternalVariable" as ivL2 {
+  name = "z2"
+  description = "Linear output of net.2"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = activation
+  producedBy = "net.2"
+}
+object "a2 : InternalVariable" as ivA2 {
+  name = "a2"
+  description = "tanh output of net.3"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = activation
+  producedBy = "net.3"
+}
+object "residual : InternalVariable" as ivL3 {
+  name = "residual"
+  description = "Linear output of net.4 (= predicted_residual)"
+  semanticIRI = []
+  quantityKind = "TemperatureDifference"
+  kind = activation
+  producedBy = "net.4"
+}
+gL1o *-- ivL1 : internalVariables
+gA1o *-- ivA1 : internalVariables
+gL2o *-- ivL2 : internalVariables
+gA2o *-- ivA2 : internalVariables
+gL3o *-- ivL3 : internalVariables
+L1 ..> gL1o : outputs
+A1 ..> gA1o : outputs
+L2 ..> gL2o : outputs
+A2 ..> gA2o : outputs
+L3 ..> gL3o : outputs
+
+$tensor2(ivL1, "batch", 0, true, "batch", "features", 32, false, "feature")
+$tensor2(ivA1, "batch", 0, true, "batch", "features", 32, false, "feature")
+$tensor2(ivL2, "batch", 0, true, "batch", "features", 32, false, "feature")
+$tensor2(ivA2, "batch", 0, true, "batch", "features", 32, false, "feature")
+$tensor2(ivL3, "batch", 0, true, "batch", "features", 1, false, "feature")
+$range(ivA1, "tanh output in (-1, 1)", "-1", false, "1", false)
+$range(ivA2, "tanh output in (-1, 1)", "-1", false, "1", false)
+$unit(ivL3, "degC", "Cel", "http://qudt.org/vocab/unit/DEG_C")
+
+' ===================== Learned parameters =====================
+object "net.0 params : GroupOfParameters" as gP1 {
+  name = "net.0"
+  description = "Weights and bias of Linear(3, 32)"
+}
+object "net.2 params : GroupOfParameters" as gP2 {
+  name = "net.2"
+  description = "Weights and bias of Linear(32, 32)"
+}
+object "net.4 params : GroupOfParameters" as gP3 {
+  name = "net.4"
+  description = "Weights and bias of Linear(32, 1)"
+}
+params *-- gP1 : groups
+params *-- gP2 : groups
+params *-- gP3 : groups
+L1 ..> gP1 : parameters
+L2 ..> gP2 : parameters
+L3 ..> gP3 : parameters
+
+object "net.0.weight : LearnedParameter" as w1 {
+  name = "net.0.weight"
+  description = "Weight matrix of net.0"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = weight
+  shape = [32, 3]
+  count = 96
+  dtype = "float32"
+  initializer = "PyTorch default (Kaiming uniform)"
+  frozen = false
+  storageRef = "residual_model.pt#state_dict/net.0.weight"
+  checksum = "TODO"
+}
+object "net.0.bias : LearnedParameter" as b1 {
+  name = "net.0.bias"
+  description = "Bias vector of net.0"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = bias
+  shape = [32]
+  count = 32
+  dtype = "float32"
+  initializer = "PyTorch default (uniform)"
+  frozen = false
+  storageRef = "residual_model.pt#state_dict/net.0.bias"
+  checksum = "TODO"
+}
+object "net.2.weight : LearnedParameter" as w2 {
+  name = "net.2.weight"
+  description = "Weight matrix of net.2"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = weight
+  shape = [32, 32]
+  count = 1024
+  dtype = "float32"
+  initializer = "PyTorch default (Kaiming uniform)"
+  frozen = false
+  storageRef = "residual_model.pt#state_dict/net.2.weight"
+  checksum = "TODO"
+}
+object "net.2.bias : LearnedParameter" as b2 {
+  name = "net.2.bias"
+  description = "Bias vector of net.2"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = bias
+  shape = [32]
+  count = 32
+  dtype = "float32"
+  initializer = "PyTorch default (uniform)"
+  frozen = false
+  storageRef = "residual_model.pt#state_dict/net.2.bias"
+  checksum = "TODO"
+}
+object "net.4.weight : LearnedParameter" as w3 {
+  name = "net.4.weight"
+  description = "Weight matrix of net.4"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  kind = weight
+  shape = [1, 32]
+  count = 32
+  dtype = "float32"
+  initializer = "PyTorch default (Kaiming uniform)"
+  frozen = false
+  storageRef = "residual_model.pt#state_dict/net.4.weight"
+  checksum = "TODO"
+}
+object "net.4.bias : LearnedParameter" as b3 {
+  name = "net.4.bias"
+  description = "Bias vector of net.4"
+  semanticIRI = []
+  quantityKind = "TemperatureDifference"
+  kind = bias
+  shape = [1]
+  count = 1
+  dtype = "float32"
+  initializer = "PyTorch default (uniform)"
+  frozen = false
+  storageRef = "residual_model.pt#state_dict/net.4.bias"
+  checksum = "TODO"
+}
+gP1 *-- w1 : parameters
+gP1 *-- b1 : parameters
+gP2 *-- w2 : parameters
+gP2 *-- b2 : parameters
+gP3 *-- w3 : parameters
+gP3 *-- b3 : parameters
+
+$tensor2(w1, "out_features", 32, false, "output", "in_features", 3, false, "input")
+$tensor1(b1, "out_features", 32, false, "output")
+$tensor2(w2, "out_features", 32, false, "output", "in_features", 32, false, "input")
+$tensor1(b2, "out_features", 32, false, "output")
+$tensor2(w3, "out_features", 1, false, "output", "in_features", 32, false, "input")
+$tensor1(b3, "out_features", 1, false, "output")
+$ref(w1, "artifacts/checkpoints/residual_model.pt#state_dict/net.0.weight", "torch state_dict")
+$ref(b1, "artifacts/checkpoints/residual_model.pt#state_dict/net.0.bias", "torch state_dict")
+$ref(w2, "artifacts/checkpoints/residual_model.pt#state_dict/net.2.weight", "torch state_dict")
+$ref(b2, "artifacts/checkpoints/residual_model.pt#state_dict/net.2.bias", "torch state_dict")
+$ref(w3, "artifacts/checkpoints/residual_model.pt#state_dict/net.4.weight", "torch state_dict")
+$ref(b3, "artifacts/checkpoints/residual_model.pt#state_dict/net.4.bias", "torch state_dict")
+$unit(b3, "degC", "Cel", "http://qudt.org/vocab/unit/DEG_C")
+
+' ===================== Non-trainable state (input normalizer) =====================
+object "normalizer : GroupOfParameters" as gN {
+  name = "FeatureNormalizer"
+  description = "z-score statistics fitted on the training split, applied before the MLP"
+}
+object "norm_mean : NonTrainableState" as nMean {
+  name = "mean"
+  description = "Per-feature mean (temperature_sim, power, ambient)"
+  semanticIRI = []
+  quantityKind = "mixed"
+  kind = buffer
+  shape = [3]
+  storageRef = "artifacts/checkpoints/normalization.json#mean"
+}
+object "norm_std : NonTrainableState" as nStd {
+  name = "std"
+  description = "Per-feature standard deviation (values < 1e-8 replaced by 1.0)"
+  semanticIRI = []
+  quantityKind = "mixed"
+  kind = buffer
+  shape = [3]
+  storageRef = "artifacts/checkpoints/normalization.json#std"
+}
+params *-- gN : groups
+gN *-- nMean : parameters
+gN *-- nStd : parameters
+$tensor1(nMean, "features", 3, false, "feature")
+$tensor1(nStd, "features", 3, false, "feature")
+$ref(nMean, "artifacts/checkpoints/normalization.json#mean", "JSON")
+$ref(nStd, "artifacts/checkpoints/normalization.json#std", "JSON")
+$range(nStd, "std > 0", "0", false, "", false)
+
+' ===================== Hyperparameters =====================
+object "hidden_sizes : Hyperparameter" as h1 {
+  name = "hidden_sizes"
+  description = "Hidden layer widths"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = architecture
+  appliesTo = "Architecture"
+  isTuned = false
+}
+object "activation : Hyperparameter" as h2 {
+  name = "activation"
+  description = "Hidden-layer activation function"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = architecture
+  appliesTo = "Architecture"
+  isTuned = false
+}
+object "learning_rate : Hyperparameter" as h3 {
+  name = "learning_rate"
+  description = "Adam learning rate"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = optimizer
+  appliesTo = "Adam"
+  isTuned = false
+}
+object "weight_decay : Hyperparameter" as h4 {
+  name = "weight_decay"
+  description = "L2 weight decay of Adam"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = regularization
+  appliesTo = "Adam"
+  isTuned = false
+}
+object "epochs : Hyperparameter" as h5 {
+  name = "epochs"
+  description = "Number of training epochs"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = training
+  appliesTo = "TrainingProcedure"
+  isTuned = false
+}
+object "batch_size : Hyperparameter" as h6 {
+  name = "batch_size"
+  description = "Mini-batch size"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = training
+  appliesTo = "TrainingProcedure"
+  isTuned = false
+}
+object "validation_fraction : Hyperparameter" as h7 {
+  name = "validation_fraction"
+  description = "Fraction of the dataset held out for validation"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = dataProcessing
+  appliesTo = "TrainingProcedure"
+  isTuned = false
+}
+object "seed : Hyperparameter" as h8 {
+  name = "seed"
+  description = "Random seed (numpy, torch, data split, shuffling)"
+  semanticIRI = []
+  quantityKind = "dimensionless"
+  category = training
+  appliesTo = "TrainingProcedure"
+  isTuned = false
+}
+params *-- h1 : parameters
+params *-- h2 : parameters
+params *-- h3 : parameters
+params *-- h4 : parameters
+params *-- h5 : parameters
+params *-- h6 : parameters
+params *-- h7 : parameters
+params *-- h8 : parameters
+h1 ..> tp : used by
+h2 ..> tp : used by
+h3 ..> tp : used by
+h4 ..> tp : used by
+h5 ..> tp : used by
+h6 ..> tp : used by
+h7 ..> tp : used by
+h8 ..> tp : used by
+
+' hidden_sizes = [32, 32]: ArrayType(IntegerType)[2], ArrayValue of two ScalarValues
+object "<size:10>h1 : ArrayType" as h1_t {
+  typeName = "Array"
+  rank = 1
+}
+object "<size:10>h1 : IntegerType (elementType)" as h1_e {
+  typeName = "Integer"
+  bits = 64
+  signed = true
+}
+object "<size:10>h1 : Dimension" as h1_d {
+  name = "layers"
+  size = 2
+  isDynamic = false
+  semantic = "layer"
+}
+object "<size:10>h1 : ArrayValue" as h1_v
+object "<size:10>h1 : ScalarValue" as h1_v1 {
+  literal = "32"
+}
+object "<size:10>h1 : ScalarValue" as h1_v2 {
+  literal = "32"
+}
+h1 *-- h1_t : dataType
+h1_t *-- h1_e : elementType
+h1_t *-- h1_d : shape
+h1 *-- h1_v : value
+h1_v *-- h1_v1 : elements
+h1_v *-- h1_v2 : elements
+$range(h1, "each width >= 1", "1", true, "", false)
+
+' activation = "tanh": EnumerationType
+object "<size:10>h2 : EnumerationType" as h2_t {
+  typeName = "Enumeration"
+  items = ["tanh", "relu", "gelu"]
+}
+h2 *-- h2_t : dataType
+$scalar(h2, "tanh", "value")
+object "<size:10>h2 : SetDomain" as h2_sd
+object "<size:10>h2 : ScalarValue (member)" as h2_m1 {
+  literal = "tanh"
+}
+object "<size:10>h2 : ScalarValue (member)" as h2_m2 {
+  literal = "relu"
+}
+object "<size:10>h2 : ScalarValue (member)" as h2_m3 {
+  literal = "gelu"
+}
+h2 *-- h2_sd : validityDomains
+h2_sd *-- h2_m1 : members
+h2_sd *-- h2_m2 : members
+h2_sd *-- h2_m3 : members
+
+$real(h3, "double (float64)")
+$scalar(h3, "0.001", "value")
+$range(h3, "learning_rate > 0", "0", false, "", false)
+
+$real(h4, "double (float64)")
+$scalar(h4, "0.0", "value")
+$range(h4, "weight_decay >= 0", "0", true, "", false)
+
+$int(h5, 64, true)
+$scalar(h5, "5", "value")
+$range(h5, "epochs >= 1", "1", true, "", false)
+
+$int(h6, 64, true)
+$scalar(h6, "64", "value")
+$range(h6, "batch_size >= 1", "1", true, "", false)
+
+$real(h7, "double (float64)")
+$scalar(h7, "0.2", "value")
+$range(h7, "0 < validation_fraction < 1", "0", false, "1", false)
+
+$int(h8, 64, true)
+$scalar(h8, "42", "value")
+
+' ===================== Verification and validation =====================
+object "vv : VerificationAndValidation" as vv
+object "eval_train : Evaluation" as e1 {
+  measure = "MSE loss per epoch (train)"
+  value = "see artifacts/metrics/train_loss.csv"
+  dataset = "train split"
+}
+object "eval_val : Evaluation" as e2 {
+  measure = "MSE loss per epoch (validation)"
+  value = "see artifacts/metrics/val_loss.csv"
+  dataset = "validation split"
+}
+mic *-- vv : verificationAndValidation
+vv *-- e1 : evaluations
+vv *-- e2 : evaluations
+
+' Not instantiated: ReferenceHardwareAndPerformance, subLayers, SearchSpace (nothing is tuned),
+' nested Port, TrainingEnvelope (not computed in the sources), Uncertainty, CompositeDomain
+@enduml

@@ -1,0 +1,165 @@
+classDiagram
+direction LR
+class MIC {
+  <<root>>
+  +generalInformation
+  +integration
+  +contentAndComputation
+  +portsInternalVariablesAndParameters
+  +verificationAndValidation
+}
+class GeneralInformation {
+  +string name
+  +string description
+  +string owner
+  +string lifeCycleState
+  +string version
+  +string versionDate
+  +string[] confidentiality
+  +string[] license
+}
+class Integration {
+}
+class Software {
+}
+class Language {
+  +string languageName
+  +string languageVersion
+}
+class FileFormat {
+  +string fileFormatName
+  +string fileFormatVersion
+}
+class RequiredSimulationTool {
+  +string toolName
+  +string toolVersion
+}
+class RequiredCompiler {
+  +string compilerName
+  +string compilerVersion
+}
+class RequiredOperatingSystem {
+  +string operatingSystemName
+  +string operatingSystemVersion
+}
+class OtherSoftwareRequirement {
+  +string softwareRequirement
+}
+class ReferenceHardwareAndPerformance {
+  +string referenceHardwareName
+  +string timeFactor
+}
+class HardwareCharacteristics {
+  +string cpu
+  +string ram
+  +string dataStorage
+  +string[] otherHardwareCharacteristics
+}
+class ContentAndComputation {
+}
+class ModellingChoice {
+  +string explicativeText
+}
+class Formalization {
+  +string modellingField
+  +enum typeOfChoice
+  +string timeScale
+}
+class Behavior {
+  +string[] behaviorSpecifications
+  +string[] modelTypes
+}
+class DefaultSolver {
+  +string solverName
+  +string stepSize
+  +enum embedded
+}
+class PortsInternalVariablesAndParameters {
+}
+class Ports {
+}
+class ValueDescription {
+  +string name
+  +string description
+  +string type
+  +string unit
+  +string defaultValue
+  +string validityDomain
+}
+class Variable {
+  +enum inOut
+}
+class Port {
+  +string name
+  +string description
+}
+class InternalVariables {
+}
+class InternalVariable {
+  <<scalar>>
+}
+class GroupOfInternalVariables {
+  +string name
+  +string description
+}
+class Parameters {
+}
+class Parameter {
+  <<scalar>>
+}
+class GroupOfParameters {
+  +string name
+  +string description
+}
+class VerificationAndValidation {
+}
+class Test {
+  +string method
+  +string documentation
+}
+class Metric {
+  +string name
+  +string score
+}
+MIC *-- "1" GeneralInformation : generalInformation
+MIC *-- "1" Integration : integration
+MIC *-- "1" ContentAndComputation : contentAndComputation
+MIC *-- "1" PortsInternalVariablesAndParameters : portsInternalVariablesAndParameters
+MIC *-- "1" VerificationAndValidation : verificationAndValidation
+Integration *-- "1" Software : software
+Integration *-- "0..*" ReferenceHardwareAndPerformance : referenceHardwareAndPerformance
+Software *-- "1..*" Language : languages
+Software *-- "1..*" FileFormat : fileFormats
+Software *-- "0..*" RequiredSimulationTool : requiredSimulationTools
+Software *-- "0..*" RequiredCompiler : requiredCompilers
+Software *-- "0..*" RequiredOperatingSystem : requiredOperatingSystems
+Software *-- "0..*" OtherSoftwareRequirement : otherSoftwareRequirements
+RequiredSimulationTool *-- "0..1" RequiredSimulationTool : alternativeTool
+RequiredCompiler *-- "0..1" RequiredCompiler : alternativeCompiler
+RequiredOperatingSystem *-- "0..1" RequiredOperatingSystem : alternativeOperatingSystem
+OtherSoftwareRequirement *-- "0..1" OtherSoftwareRequirement : alternativeSoftwareRequirement
+ReferenceHardwareAndPerformance *-- "1" HardwareCharacteristics : hardwareCharacteristics
+ContentAndComputation *-- "0..*" ModellingChoice : modellingChoices
+ContentAndComputation *-- "1" Behavior : behavior
+ContentAndComputation *-- "0..1" DefaultSolver : defaultSolver
+ModellingChoice *-- "0..*" Formalization : formalizations
+PortsInternalVariablesAndParameters *-- "1" Ports : ports
+PortsInternalVariablesAndParameters *-- "1" InternalVariables : internalVariables
+PortsInternalVariablesAndParameters *-- "1" Parameters : parameters
+Ports *-- "0..*" Variable : variables
+Ports *-- "0..*" Port : ports
+ValueDescription <|-- Variable
+Port *-- "0..*" Variable : variables
+Port *-- "0..*" Port : ports
+InternalVariables *-- "0..*" InternalVariable : internalVariables
+InternalVariables *-- "0..*" GroupOfInternalVariables : groups
+ValueDescription <|-- InternalVariable
+GroupOfInternalVariables *-- "0..*" InternalVariable : internalVariables
+GroupOfInternalVariables *-- "0..*" GroupOfInternalVariables : groups
+Parameters *-- "0..*" Parameter : parameters
+Parameters *-- "0..*" GroupOfParameters : groups
+ValueDescription <|-- Parameter
+GroupOfParameters *-- "0..*" Parameter : parameters
+GroupOfParameters *-- "0..*" GroupOfParameters : groups
+VerificationAndValidation *-- "0..*" Test : tests
+VerificationAndValidation *-- "0..*" Metric : metrics

@@ -1,0 +1,195 @@
+# MIC v2.0 class diagram, generated from mic-v2.schema.json
+direction: right
+
+MIC: {
+  shape: class
+  "+generalInformation"
+  "+integration"
+  "+contentAndComputation"
+  "+portsInternalVariablesAndParameters"
+  "+verificationAndValidation"
+}
+GeneralInformation: {
+  shape: class
+  "+name": "string"
+  "+description": "string"
+  "+owner": "string"
+  "+lifeCycleState": "string"
+  "+version": "string"
+  "+versionDate": "string"
+  "+confidentiality": "string[]"
+  "+license": "string[]"
+}
+Integration: {
+  shape: class
+}
+Software: {
+  shape: class
+}
+Language: {
+  shape: class
+  "+languageName": "string"
+  "+languageVersion": "string"
+}
+FileFormat: {
+  shape: class
+  "+fileFormatName": "string"
+  "+fileFormatVersion": "string"
+}
+RequiredSimulationTool: {
+  shape: class
+  "+toolName": "string"
+  "+toolVersion": "string"
+}
+RequiredCompiler: {
+  shape: class
+  "+compilerName": "string"
+  "+compilerVersion": "string"
+}
+RequiredOperatingSystem: {
+  shape: class
+  "+operatingSystemName": "string"
+  "+operatingSystemVersion": "string"
+}
+OtherSoftwareRequirement: {
+  shape: class
+  "+softwareRequirement": "string"
+}
+ReferenceHardwareAndPerformance: {
+  shape: class
+  "+referenceHardwareName": "string"
+  "+timeFactor": "string"
+}
+HardwareCharacteristics: {
+  shape: class
+  "+cpu": "string"
+  "+ram": "string"
+  "+dataStorage": "string"
+  "+otherHardwareCharacteristics": "string[]"
+}
+ContentAndComputation: {
+  shape: class
+}
+ModellingChoice: {
+  shape: class
+  "+explicativeText": "string"
+}
+Formalization: {
+  shape: class
+  "+modellingField": "string"
+  "+typeOfChoice": "enum(model|neglect)"
+  "+timeScale": "string"
+}
+Behavior: {
+  shape: class
+  "+behaviorSpecifications": "string[]"
+  "+modelTypes": "string[]"
+}
+DefaultSolver: {
+  shape: class
+  "+solverName": "string"
+  "+stepSize": "string"
+  "+embedded": "enum(Yes|No)"
+}
+PortsInternalVariablesAndParameters: {
+  shape: class
+}
+Ports: {
+  shape: class
+}
+ValueDescription: {
+  shape: class
+  "+name": "string"
+  "+description": "string"
+  "+type": "string"
+  "+unit": "string"
+  "+defaultValue": "string"
+  "+validityDomain": "string"
+}
+Variable: {
+  shape: class
+  "+inOut": "enum(In|Out)"
+}
+Port: {
+  shape: class
+  "+name": "string"
+  "+description": "string"
+}
+InternalVariables: {
+  shape: class
+}
+InternalVariable: {
+  shape: class
+}
+GroupOfInternalVariables: {
+  shape: class
+  "+name": "string"
+  "+description": "string"
+}
+Parameters: {
+  shape: class
+}
+Parameter: {
+  shape: class
+}
+GroupOfParameters: {
+  shape: class
+  "+name": "string"
+  "+description": "string"
+}
+VerificationAndValidation: {
+  shape: class
+}
+Test: {
+  shape: class
+  "+method": "string"
+  "+documentation": "string"
+}
+Metric: {
+  shape: class
+  "+name": "string"
+  "+score": "string"
+}
+
+MIC -> GeneralInformation: "generalInformation [1]" {source-arrowhead.shape: diamond}
+MIC -> Integration: "integration [1]" {source-arrowhead.shape: diamond}
+MIC -> ContentAndComputation: "contentAndComputation [1]" {source-arrowhead.shape: diamond}
+MIC -> PortsInternalVariablesAndParameters: "portsInternalVariablesAndParameters [1]" {source-arrowhead.shape: diamond}
+MIC -> VerificationAndValidation: "verificationAndValidation [1]" {source-arrowhead.shape: diamond}
+Integration -> Software: "software [1]" {source-arrowhead.shape: diamond}
+Integration -> ReferenceHardwareAndPerformance: "referenceHardwareAndPerformance [0..*]" {source-arrowhead.shape: diamond}
+Software -> Language: "languages [1..*]" {source-arrowhead.shape: diamond}
+Software -> FileFormat: "fileFormats [1..*]" {source-arrowhead.shape: diamond}
+Software -> RequiredSimulationTool: "requiredSimulationTools [0..*]" {source-arrowhead.shape: diamond}
+Software -> RequiredCompiler: "requiredCompilers [0..*]" {source-arrowhead.shape: diamond}
+Software -> RequiredOperatingSystem: "requiredOperatingSystems [0..*]" {source-arrowhead.shape: diamond}
+Software -> OtherSoftwareRequirement: "otherSoftwareRequirements [0..*]" {source-arrowhead.shape: diamond}
+RequiredSimulationTool -> RequiredSimulationTool: "alternativeTool [0..1]" {source-arrowhead.shape: diamond}
+RequiredCompiler -> RequiredCompiler: "alternativeCompiler [0..1]" {source-arrowhead.shape: diamond}
+RequiredOperatingSystem -> RequiredOperatingSystem: "alternativeOperatingSystem [0..1]" {source-arrowhead.shape: diamond}
+OtherSoftwareRequirement -> OtherSoftwareRequirement: "alternativeSoftwareRequirement [0..1]" {source-arrowhead.shape: diamond}
+ReferenceHardwareAndPerformance -> HardwareCharacteristics: "hardwareCharacteristics [1]" {source-arrowhead.shape: diamond}
+ContentAndComputation -> ModellingChoice: "modellingChoices [0..*]" {source-arrowhead.shape: diamond}
+ContentAndComputation -> Behavior: "behavior [1]" {source-arrowhead.shape: diamond}
+ContentAndComputation -> DefaultSolver: "defaultSolver [0..1]" {source-arrowhead.shape: diamond}
+ModellingChoice -> Formalization: "formalizations [0..*]" {source-arrowhead.shape: diamond}
+PortsInternalVariablesAndParameters -> Ports: "ports [1]" {source-arrowhead.shape: diamond}
+PortsInternalVariablesAndParameters -> InternalVariables: "internalVariables [1]" {source-arrowhead.shape: diamond}
+PortsInternalVariablesAndParameters -> Parameters: "parameters [1]" {source-arrowhead.shape: diamond}
+Ports -> Variable: "variables [0..*]" {source-arrowhead.shape: diamond}
+Ports -> Port: "ports [0..*]" {source-arrowhead.shape: diamond}
+Variable -> ValueDescription: {target-arrowhead.shape: triangle}
+Port -> Variable: "variables [0..*]" {source-arrowhead.shape: diamond}
+Port -> Port: "ports [0..*]" {source-arrowhead.shape: diamond}
+InternalVariables -> InternalVariable: "internalVariables [0..*]" {source-arrowhead.shape: diamond}
+InternalVariables -> GroupOfInternalVariables: "groups [0..*]" {source-arrowhead.shape: diamond}
+InternalVariable -> ValueDescription: {target-arrowhead.shape: triangle}
+GroupOfInternalVariables -> InternalVariable: "internalVariables [0..*]" {source-arrowhead.shape: diamond}
+GroupOfInternalVariables -> GroupOfInternalVariables: "groups [0..*]" {source-arrowhead.shape: diamond}
+Parameters -> Parameter: "parameters [0..*]" {source-arrowhead.shape: diamond}
+Parameters -> GroupOfParameters: "groups [0..*]" {source-arrowhead.shape: diamond}
+Parameter -> ValueDescription: {target-arrowhead.shape: triangle}
+GroupOfParameters -> Parameter: "parameters [0..*]" {source-arrowhead.shape: diamond}
+GroupOfParameters -> GroupOfParameters: "groups [0..*]" {source-arrowhead.shape: diamond}
+VerificationAndValidation -> Test: "tests [0..*]" {source-arrowhead.shape: diamond}
+VerificationAndValidation -> Metric: "metrics [0..*]" {source-arrowhead.shape: diamond}
